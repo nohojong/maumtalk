@@ -1,4 +1,6 @@
 import { useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import { MicIcon, VoiceChatIcon, SendIcon } from "./Icons";
 
 function ChatInput({
@@ -9,6 +11,8 @@ function ChatInput({
   handleModeSwitch,
 }) {
   const textareaRef = useRef(null);
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -16,6 +20,24 @@ function ChatInput({
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [input]);
+
+  // text 입력시 로그인 여부 확인
+  const handleTextChange = (e) => {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+    setInput(e.target.value);
+  };
+
+  // 전송 버튼 클릭시 로그인 여부 확인
+  const onSendMessageClick = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+    handleSendMessage();
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -33,14 +55,14 @@ function ChatInput({
           className="bg-transparent w-full focus:outline-none focus:ring-0 border-none resize-none overflow-y-auto max-h-32 py-2 px-3"
           placeholder="메시지를 입력하세요..."
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={handleTextChange}
           onKeyDown={handleKeyDown}
           readOnly={chatMode !== "text"}
         />
         {input.length > 0 ? (
           <button
             className="btn btn-info btn-circle"
-            onClick={handleSendMessage}
+            onClick={onSendMessageClick}
           >
             <SendIcon />
           </button>

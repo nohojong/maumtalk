@@ -1,10 +1,10 @@
 function ChatMessage({ message }) {
-  const isUser = message.sender === "user";
+  const isUser = message.sender?.toLowerCase() === "user";
 
   return (
     <div className={`chat ${isUser ? "chat-end" : "chat-start"}`}>
       <div className={`chat-bubble ${isUser ? "chat-bubble-info" : ""}`}>
-        {message.text}
+        {message.message}
       </div>
     </div>
   );

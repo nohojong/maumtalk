@@ -1,11 +1,101 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko" data-theme="cupcake">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Document</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 상담 챗봇</title>
+    <!-- Tailwind CSS와 DaisyUI를 사용하기 위한 CDN 링크 -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-4">AI 상담 챗봇</h1>
+        
+        <!-- 채팅 메시지가 표시될 영역 -->
+        <div id="chat" class="w-full h-96 overflow-y-auto mb-4 p-4 border rounded-lg bg-base-200 space-y-4">
+            <!-- 초기 AI 메시지 -->
+            <div class="chat chat-start">
+                <div class="chat-bubble chat-bubble-primary">안녕하세요! 무엇을 도와드릴까요?</div>
+            </div>
+        </div>
+
+        <!-- 메시지 입력 창 -->
+        <div class="flex space-x-2">
+            <input id="msgInput" type="text" placeholder="메시지를 입력하세요..." class="input input-bordered w-full" />
+            <button id="sendBtn" class="btn btn-primary">전송</button>
+        </div>
+    </div>
+
+
+    <script>
+        // HTML 요소들을 가져옵니다.
+        const chatDiv = document.getElementById('chat');
+        const msgInput = document.getElementById('msgInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // '전송' 버튼 클릭 시 실행될 함수
+        sendBtn.addEventListener('click', sendMessage);
+        
+        // 입력창에서 Enter 키를 눌렀을 때도 메시지가 전송되도록 합니다.
+        msgInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const message = msgInput.value.trim();
+            if (!message) return; // 메시지가 비어있으면 아무것도 안 함
+
+            // 1. 내가 보낸 메시지를 화면에 표시
+            appendMessage('나', message);
+            msgInput.value = ''; // 입력창 비우기
+
+            try {
+                // 2. 서버(백엔드)에 메시지를 보내고 응답을 기다림
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message }) // JSON 형식으로 데이터 전송
+                });
+
+                if (!response.ok) {
+                    // 서버에서 500 에러 등이 발생했을 경우
+                    throw new Error('서버 응답 오류: ' + response.statusText);
+                }
+
+                const data = await response.json();
+
+                // 3. AI의 응답을 화면에 표시
+                appendMessage('AI', data.response);
+
+            } catch (error) {
+                // 에러가 발생했을 경우 AI 응답 대신 에러 메시지 표시
+                console.error('Error:', error);
+                appendMessage('AI', '죄송해요, 오류가 발생했어요. 잠시 후 다시 시도해주세요.');
+            }
+        }
+
+        // 화면에 말풍선을 추가하는 함수
+        function appendMessage(sender, msg) {
+            const messageDiv = document.createElement('div');
+            
+            // 보내는 사람에 따라 말풍선 스타일을 다르게 적용 (DaisyUI 클래스)
+            const side = (sender === 'AI') ? 'chat-start' : 'chat-end';
+            const bubbleColor = (sender === 'AI') ? 'chat-bubble-primary' : 'chat-bubble-secondary';
+
+            messageDiv.className = `chat ${side}`;
+            messageDiv.innerHTML = `<div class="chat-bubble ${bubbleColor}">${msg}</div>`;
+            
+            chatDiv.appendChild(messageDiv);
+
+            // 스크롤을 항상 맨 아래로 이동
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+    </script>
 </body>
 </html>

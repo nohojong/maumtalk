@@ -1,45 +1,58 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.4'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.5.4'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
-
 group = 'io.notfound'
 version = '0.0.1-SNAPSHOT'
-
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
-
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
-
+ext {
+    set('springAiVersion', "1.0.2")
+}
 dependencies {
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.4.0'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-	runtimeOnly 'com.mysql:mysql-connector-j'
-
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+//    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'com.google.genai:google-genai:1.15.0'
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+    implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc'
+//    implementation 'org.springframework.ai:spring-ai-advisors-vector-store'
+//    implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    //    runtimeOnly("org.postgresql:postgresql")
     compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
-
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
+}
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
