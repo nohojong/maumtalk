@@ -5,12 +5,11 @@ import io.notfound.counsel_back.common.exception.CustomException;
 import io.notfound.counsel_back.common.exception.ErrorCode;
 import io.notfound.counsel_back.common.util.CookieUtil;
 import io.notfound.counsel_back.auth.dto.LoginRequestDto;
-import io.notfound.counsel_back.conversation.entity.Conversation;
 import io.notfound.counsel_back.user.entity.User;
 import io.notfound.counsel_back.user.entity.UserRole;
 import io.notfound.counsel_back.user.repository.UserRepository;
 import io.notfound.counsel_back.security.core.JwtTokenProvider;
-// import io.notfound.counsel_back.auth.service.TokenBlacklistService; // Redis 서비스
+import io.notfound.counsel_back.auth.service.TokenBlacklistService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +28,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
-    // private final TokenBlacklistService tokenBlacklistService; // Redis 구현 후 활성화
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Transactional
     public void register(LoginRequestDto request) {
@@ -84,13 +83,11 @@ public class AuthService {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
-        // 2. 블랙리스트 확인 (Redis 구현 후 활성화)
-        /*
+        // 2. 블랙리스트 확인
         if (tokenBlacklistService.isBlacklisted(refreshToken)) {
             log.warn("블랙리스트된 refresh token으로 갱신 시도");
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
-        */
 
         String email = jwtTokenProvider.getUserId(refreshToken);
         log.info("토큰 갱신 대상 사용자: {}", email);
@@ -111,10 +108,8 @@ public class AuthService {
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         log.info("로그아웃 요청");
 
-        // Redis 블랙리스트 구현 후 활성화
-        /*
+        // 현재 사용자의 토큰들을 블랙리스트에 추가
         try {
-            // 현재 사용자의 토큰들을 블랙리스트에 추가
             String accessToken = CookieUtil.getAccessToken(request);
             String refreshToken = CookieUtil.getRefreshToken(request);
 
@@ -130,7 +125,6 @@ public class AuthService {
             log.warn("로그아웃 시 토큰 블랙리스트 처리 중 오류 발생", e);
             // 블랙리스트 실패해도 로그아웃은 진행
         }
-        */
 
         CookieUtil.deleteTokens(response);
         log.info("로그아웃 완료");
